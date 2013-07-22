@@ -6,3 +6,5 @@ Data grabbed from geonet: #http://wfs-beta.geonet.org.nz/geoserver/geonet/ows?se
  
  
 put the py file and the data csv file in the same folder. 
+
+It would be really amazing if someone could show me how to add the map to the top layer.... 
