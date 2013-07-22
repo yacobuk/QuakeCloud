@@ -70,7 +70,7 @@ class VtkPointCloud:
 
 
 def main():
-    pm = Points_Maker("quake.csv")
+    pm = Points_Maker("quake_data.csv")
     renderer = vtk.vtkRenderer()
     pointCloud2 = VtkPointCloud()
     for bound in pm.bounds:
