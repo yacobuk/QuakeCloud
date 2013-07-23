@@ -13,15 +13,24 @@ class Points_Maker(object):
         self.logitude = None
         self.depth = None
         self.earth_radius = 6373 #ref radius @ sea level (km)
-        self.long_min = 174 * self.multiplyer
-        self.long_max = 175 * self.multiplyer
-        self.lat_min = -41 * self.multiplyer
-        self.lat_max = -42 * self.multiplyer
+        self.long_min = 174
+        self.long_max = 175
+        self.lat_min = -41
+        self.lat_max = -42
+        self.lat_max_distance = None
+        self.long_max_distance = None
         self.points = []
         self.points_mag = []
         self.max_depth = None
         self.bounds = None
         self.get_data()
+
+    def set_lat_and_long_max_distance(self):
+        bound = (self.lat_min, self.long_max, 0)
+        self.lat_max_distance = self.convert_bound_to_distance(bound)
+        bound = (self.lat_max, self.long_min, 0)
+        self.long_max_distance = self.convert_bound_to_distance(bound)
+
 
     def make_bounds(self):
         self.bounds = [[self.lat_min, self.long_min, 0], \
@@ -89,7 +98,7 @@ class Points_Maker(object):
                 x_point = self.make_x_point(self.latitude, self.depth)
                 y_point = self.make_y_point(self.longitude, self.depth)
                 point = [x_point,  y_point, self.depth]
-                point_and_mag = [[x_point,  y_point, self.depth], magnitude]
+                point_and_mag = [[x_point*self.multiplyer,  y_point*self.multiplyer, self.depth*self.multiplyer], magnitude]
                 point = numpy.asarray(point)
                 point_and_mag = numpy.asarray(point_and_mag)
                 self.points.append(point)
@@ -101,19 +110,18 @@ class Points_Maker(object):
         x, y, depth = bound
         x_point = self.make_x_point(x, depth)
         y_point = self.make_y_point(y, depth)
-        bound = (x_point, y_point, depth)
+        bound = (x_point*self.multiplyer, y_point*self.multiplyer, depth*self.multiplyer)
         return bound
 
 class VtkPointCloud:
-
-    def __init__(self, zMin=-0.0, zMax=155, maxNumPoints=1e6): #sets colour limits
+    def __init__(self, pm, zMin=-0.0, zMax=156, maxNumPoints=1e6): #sets colour limits
         self.maxNumPoints = maxNumPoints
         self.vtkPolyData = vtk.vtkPolyData()
         self.clearPoints()
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInput(self.vtkPolyData)
         mapper.SetColorModeToDefault()
-        mapper.SetScalarRange(zMin, zMax)
+        mapper.SetScalarRange(zMin, pm.max_depth)
         mapper.SetScalarVisibility(1)
         self.vtkActor = vtk.vtkActor()
         self.vtkActor.SetMapper(mapper)
@@ -144,24 +152,53 @@ class VtkPointCloud:
 def main():
     pm = Points_Maker("quake.csv")
     renderer = vtk.vtkRenderer()
-    pointCloud2 = VtkPointCloud()
+    pointCloud_bounds = VtkPointCloud(pm)
     for point_and_mag in pm.points_mag:
         mag = point_and_mag[1]
         point = point_and_mag[0]
-        print point
-        if mag > 1:
-            pointCloud = VtkPointCloud()
-            pointCloud.addPoint(point, math.log(mag)*1)
+        if mag > 4:
+            pointCloud = VtkPointCloud(pm)
+            pointCloud.addPoint(point, math.log(mag)*10)
             renderer.AddActor(pointCloud.vtkActor)
     pm.make_bounds()
     for bound in pm.bounds:
         bound = pm.convert_bound_to_distance(bound)
-        print bound
-        pointCloud2.addPoint(bound, 10)  # the number is what makes the bound markers larger
-    renderer.AddActor(pointCloud2.vtkActor)
-    renderer.SetBackground(.2, .3, .3)  #colour
+        pointCloud_bounds.addPoint(bound, 10)  # the number is what makes the bound markers larger
+    renderer.AddActor(pointCloud_bounds.vtkActor)
+    renderer.SetBackground(.2, .3, .3)
     renderer.ResetCamera()
 
+    # apply texture
+    input_image = "overlay.jpg"
+
+    # Read the image data from a file
+    reader = vtk.vtkJPEGReader()
+    reader.SetFileName(input_image)
+
+    # Create texture object
+    texture = vtk.vtkTexture()
+    texture.SetInput(reader.GetOutput())
+
+    texture.SetInputConnection(reader.GetOutputPort())
+    texture.InterpolateOn()
+    pointCloud_overlay = VtkPointCloud(pm)
+    pm.set_lat_and_long_max_distance()
+    plane = vtk.vtkPlaneSource()
+
+    print  pm.long_max_distance
+    print pm.lat_max_distance
+    plane.SetOrigin((0, 0, 0))
+    plane.SetPoint1(pm.lat_max_distance)
+    plane.SetPoint2(pm.long_max_distance)
+
+
+    planeMapper = vtk.vtkPolyDataMapper()
+    planeMapper.SetInputConnection(plane.GetOutputPort())
+    planeActor = vtk.vtkActor()
+    planeActor.SetMapper(planeMapper)
+    planeActor.SetTexture(texture)
+
+    renderer.AddActor(planeActor)
     # Render Window
     renderWindow = vtk.vtkRenderWindow()
     renderWindow.AddRenderer(renderer)
