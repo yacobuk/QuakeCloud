@@ -16,10 +16,10 @@ This is a 3d quake event visualiser. There are a number of supported variables i
         self.plot_boundary_markers = False  # If true, displays the corner boundary markers
         self.plot_depth_scale = True  # If true. displays the depth scale markers
 
-        # quake_data_location
+        # Quake event data location
         self.fname = "quake_data.csv"
 
-        #mapping vars
+        # Mapping vars
         self.overlay_image_fname = "overlay.jpg"
         self.map_height = 0  # Sets the top height of the model in km
         self.long_min = 174  # defines the minimum longitude bounds of the sampled area
