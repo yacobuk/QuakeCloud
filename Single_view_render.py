@@ -329,38 +329,120 @@ class vtkTimerCallback():
         self.timer_count += 1
 
 
-class Set_Render_Variables(object):
+class Set_Render_Variables(object, fname,
+
+    display_mag_threshold=1, display_event_window_in_event_blocks=6,
+    minutes_per_event_block=20, replay_frame_speed=50, display_point_scalar_for_quake_points=10,
+    display_quake_points_log=False, display_quake_points_linear=True, display_quake_points_only_no_mag=False,
+    plot_boundary_markers=False,
+    
+    overlay_image_fname="overlay.jpg", map_height=0, long_min=174, long_max=175, lat_min=-41, lat_max=-42
+    multiplier=1):
     """ 
-    used to set the various controsl that allow the user to specify the supported "look", timing and map options
+    Used to set the various controsl that allow the user to specify the supported "look", timing and map options.
+    
+    Required Parameters:
+      fname
+        (string)
+        file name of the unput data source 
+     
+    Plotting/Display Parameters:
+      display_mag_threshold
+        (int/float, defaults to 1)
+        sets the minimum Richter magnitude of quake to display
+
+      display_event_window_in_event_blocks
+        (int, defaults to 6)
+        sets the number of frames the event set will persist on map
+    
+      minutes_per_event_block
+        (int, defaults to 20)
+        minutes between each frame
+
+      replay_frame_speed
+        (int, defaults to 50)
+        defines the refresh rate of the replay in ms
+    
+      display_point_scalar_for_quake_points
+        (int, defaults to 10)
+        
+      display_quake_points_log
+        (boolean, defaults to False)
+        when True, quake points are plotted in size with magnitude in log scale
+    
+      display_quake_points_linear
+        (boolean, defaults to True)
+        when True, quake points are plotted in size with magnitude in linear scale
+    
+      display_quake_points_only_no_mag
+        (boolean, defaults to False)
+        when True, quake points are just plotted in size, with no magnitude data
+    
+      plot_boundary_markers
+        (boolean, defaults to False)
+         when true, displays the corner boundary markers
+    
+      plot_depth_scale
+        (boolean, defaults to True)
+        when true, displayes the depth scale markers
+        
+    Mapping Parameters:
+      overlay_image_fname
+        (string, defaults to "overlay.jpg")
+        
+      map_height
+        (int, defaults to 0)
+        Sets the top height of the model in km
+        
+      long_min
+        (int, defaults to 174)
+        defines the minimum longitude bounds of the sampled area
+          
+      long_max
+        (int, defaults to 175)
+         defines the maximum longitude bounds of the sampled area
+        
+      lat_min
+        (int, defaults to 175)
+        defines the minimum latitude bounds of the sampled area
+        
+      lat_max
+        (int, defaults to 175)
+        defines the maximum latitude bounds of the sampled area
+    
+      multiplier
+        (int, defaults to 1)
+        used to allow the whole model to be scaled up if needed
+        WARNING: danger zone, has bugs
     """
     def __init__(self):
         # Display Vars
-        self.display_mag_threshold = 1  # sets the minimum magnitude of quake to display
-        self.display_event_window_in_event_blocks = 6  # sets the number of frames the event set will persist on map)
-        self.minutes_per_event_block = 20  # in mins
-        self.replay_frame_speed = 50  # defines the refresh rate of the replay
-        self.display_point_scalar_for_quake_points = 10
-        self.display_quake_points_log = False  # if True, quake points are plotted in size with magnitude in log scale
-        self.display_quake_points_linear = True  # if True, quake points are plotted in size with magnitude in linear scale
-        self.display_quake_points_only_no_mag = False  # if True, quake points are just plotted in size, with no magnitude data
-        self.plot_boundary_markers = False  # If true, displays the corner boundary markers
-        self.plot_depth_scale = True  # If true. displays the depth scale markers
+        self.display_mag_threshold = display_mag_threshold 
+        self.display_event_window_in_event_blocks = display_event_window_in_event_blocks
+        self.minutes_per_event_block = minutes_per_event_block
+        self.replay_frame_speed = replay_frame_speed
+        self.display_point_scalar_for_quake_points = display_point_scalar_for_quake_points
+        self.display_quake_points_log = display_quake_points_log
+        self.display_quake_points_linear = display_quake_points_linear
+        self.display_quake_points_only_no_mag = display_quake_points_only_no_mag 
+        self.plot_boundary_markers = plot_boundary_markers
+        self.plot_depth_scale =plot_depth_scale
 
         # quake_data_location
-        self.fname = "quake(13).csv"
+        self.fname = fname
 
         #mapping vars
         self.overlay_image_fname = "overlay.jpg"
-        self.map_height = 0  # Sets the top height of the model in km
-        self.long_min = 174  # defines the minimum longitude bounds of the sampled area
-        self.long_max = 175  # defines the maximum longitude bounds of the sampled area
-        self.lat_min = -41  # defines the minimum latitude bounds of the sampled area
-        self.lat_max = -42  # defines the maximum latitude bounds of the sampled area
-        self.multiplier = 1  # used to allow the whole model to be scaled up if needed (has bugs)
+        self.map_height = map_height
+        self.long_min = long_min
+        self.long_max = long_max
+        self.lat_min = lat_min
+        self.lat_max = lat_max
+        self.multiplier = multiplier
 
 
 def main():
-    session = Set_Render_Variables()
+    session = Set_Render_Variables("quake(13).csv")
 
     data = Data_Extractor(session)
     bounds = Model_Bounds_Points_Maker(data, session)
